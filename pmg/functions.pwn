@@ -79,7 +79,6 @@ stock SetPMGMemberInfo(playerid, gid, rid)
 	new query[128];
 	mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgmembers (username, pmgid, rankid) VALUES ('%s', %d, %d)", PlayerName(playerid), gid, rid);
 	mysql_tquery(dbhandle, query, "");
-	pmgMemberInfo[playerid][gid][pmg_member_id] = playerid;
     pmgMemberInfo[playerid][gid][pmg_member_pmgid] = gid;
 	pmgMemberInfo[playerid][gid][pmg_member_rankid] = rid;
     format(pmgMemberInfo[playerid][gid][pmg_member_name], MAX_PLAYER_NAME, PlayerName(playerid));
@@ -110,7 +109,6 @@ public LoadPMGRanks()
 		cache_get_value_name_int(i, "rankid", rid);
 		cache_get_value_name_int(i, "rankid", pmgRankInfo[gid][rid][pmg_rank_id]);
 		cache_get_value_name(i, "rankname", pmgRankInfo[gid][rid][pmg_rank_name]);
-		printf("pmg id: %d, rank id: %d, rank name: %s", gid, pmgRankInfo[gid][rid][pmg_rank_id], pmgRankInfo[gid][rid][pmg_rank_name]);
 	}
 }
 
@@ -121,14 +119,12 @@ public LoadPMGMemberData(playerid)
 	cache_get_row_count(rows);
 	for(new i; i < rows; i++)
 	{
-		cache_get_value_name_int(0, "pmgid", gid);
-		//cache_get_value_name_int(0, "userid", pmgMemberInfo[playerid][gid][pmg_member_id]);
-		cache_get_value_name(0, "username", pmgMemberInfo[playerid][gid][pmg_member_name]);
-		cache_get_value_name_int(0, "pmgid", pmgMemberInfo[playerid][gid][pmg_member_pmgid]);
-		cache_get_value_name_int(0, "rankid", pmgMemberInfo[playerid][gid][pmg_member_rankid]);
+		cache_get_value_name_int(i, "pmgid", gid);
+		cache_get_value_name(i, "username", pmgMemberInfo[playerid][gid][pmg_member_name]);
+		cache_get_value_name_int(i, "pmgid", pmgMemberInfo[playerid][gid][pmg_member_pmgid]);
+		cache_get_value_name_int(i, "rankid", pmgMemberInfo[playerid][gid][pmg_member_rankid]);
 		if(pmgMemberInfo[playerid][gid][pmg_member_name] == pmgInfo[gid][pmg_owner_name])
 			SetPVarInt(playerid, "groupCreated", 1);
-		printf("username: %s, pmgid: %d, rankid: %d", pmgMemberInfo[playerid][gid][pmg_member_name], pmgMemberInfo[playerid][gid][pmg_member_pmgid], pmgMemberInfo[playerid][gid][pmg_member_rankid]);
 	}
 	primaryPMG[playerid] = -2;
 }
@@ -138,10 +134,9 @@ stock RemovePlayerFromPMG(playerid, gid)
 	new query[128];
 	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgmembers WHERE username='%s' AND pmgid='%d'", PlayerName(playerid), gid);
 	mysql_tquery(dbhandle, query, "");
-	pmgMemberInfo[playerid][gid][pmg_member_id] = -1;
     pmgMemberInfo[playerid][gid][pmg_member_pmgid] = -1;
 	pmgMemberInfo[playerid][gid][pmg_member_rankid] = -1;
-	format(pmgMemberInfo[playerid][gid][pmg_member_name], MAX_PLAYER_NAME, "INVALIDMNAME");
+	format(pmgMemberInfo[playerid][gid][pmg_member_name], MAX_PLAYER_NAME, "INVALID MNAME");
 	if(primaryPMG[playerid] == gid)
 		primaryPMG[playerid] = -1;
 	pmgInvite[playerid][gid] = false;
@@ -155,7 +150,6 @@ stock ResetPMGMemberInfo(playerid)
 		format(pmgMemberInfo[playerid][i][pmg_member_name], MAX_PLAYER_NAME, "INVALID MNAME");
     	pmgMemberInfo[playerid][i][pmg_member_pmgid] = -1;
 		pmgMemberInfo[playerid][i][pmg_member_rankid] = -1;
-		pmgMemberInfo[playerid][i][pmg_member_id] = -1;
 	}
 }
 
@@ -165,6 +159,8 @@ stock DeletePMG(playerid, groupid)
 	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgdata WHERE pmgid=%d", groupid);
 	mysql_tquery(dbhandle, query, "");
 	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgranks WHERE pmgid=%d", groupid);
+	mysql_tquery(dbhandle, query, "");
+	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgmembers WHERE pmgid=%d", groupid);
 	mysql_tquery(dbhandle, query, "");
 	RemovePlayerFromPMG(playerid, groupid);
 	pmgInfo[groupid][pmgid] = -1;
@@ -295,7 +291,6 @@ stock PMGSayCMD(playerid, arg1[])
 	    selid = primaryPMG[playerid];
 	    rid = pmgMemberInfo[playerid][selid][pmg_member_rankid];
 	    format(str, sizeof(str), "{FFFF00}PMG: (%s) %s(%d): %s", pmgRankInfo[selid][rid][pmg_rank_name], PlayerName(playerid), playerid, arg1);
-	    //format(str, sizeof(str), "PMG [] %s(%d): %s", PlayerName(playerid), playerid, arg1);
 	    foreach(new i : Player)
 	    {
 	        if(primaryPMG[i] == selid)
@@ -368,6 +363,8 @@ stock PMGDeleteCMD(playerid, id)
 	new str[64];
     if(pmgInfo[id][pmg_owner_name] == pmgMemberInfo[playerid][id][pmg_member_name])
     {
+        if(!GetPVarInt(playerid, "groupCreated"))
+            return SendErrorMessage(playerid, "You do not own any group.");
         format(str, sizeof(str), "You have deleted '%s'!", pmgInfo[id][pmgname]);
         SendPMGMessage(playerid, str);
         DeletePMG(playerid, id);
@@ -376,6 +373,7 @@ stock PMGDeleteCMD(playerid, id)
     {
         SendErrorMessage(playerid, "You are not the owner of this group!");
     }
+    return 1;
 }
 
 stock PMGManageCMD(playerid)
@@ -395,9 +393,12 @@ stock PMGManageCMD(playerid)
                 #pragma unused _playerId, _dialogid, _inputtext, _response, _listitem
                     if(_response)
 	                {
+						new query[128];
                         if(!IsPMGNameValid(_inputtext))
                             return SendErrorMessage(playerid, "Your PMG name may only contain numbers and letters!");
                         strcopy(pmgInfo[gid][pmgname], _inputtext);
+						mysql_format(dbhandle, query, sizeof(query), "UPDATE pmgdata SET pmgname='%s' WHERE pmgid=%d", _inputtext, gid);
+                        mysql_tquery(dbhandle, query, "");
                         format(str, sizeof(str), "Succesfully changed PMG name to: %s", pmgInfo[gid][pmgname]);
                         SendPMGMessage(playerid, str);
                     }
@@ -504,11 +505,14 @@ stock PMGManageCMD(playerid)
                                     }
                                     else if(0 < trank < MAX_PMG_RANKS)
                                     {
-                                        SetPMGMemberInfo(targetid, gid, trank);
+										new query[128];
+										pmgMemberInfo[targetid][gid][pmg_member_rankid] = trank;
                                         format(str, sizeof(str), "User '%s' now has the rank '%s'", PlayerName(targetid), pmgRankInfo[gid][pmgMemberInfo[targetid][gid][pmg_member_rankid]][pmg_rank_name]);
                                         SendPMGMessage(playerid, str);
                                         format(str, sizeof(str), "%s(%d) has set your rank to {FFFF00}%s{FFFFff} in {FFFF00}%s", PlayerName(playerid), playerid, pmgRankInfo[gid][trank][pmg_rank_name], pmgInfo[gid][pmgname], PlayerName(targetid));
                                         SendPMGMessage(targetid, str);
+										mysql_format(dbhandle, query, sizeof(query), "UPDATE pmgmembers SET rankid=%d WHERE username='%s'", trank, PlayerName(targetid));
+                                        mysql_tquery(dbhandle, query, "");
                                     }
                                     else
                                     {

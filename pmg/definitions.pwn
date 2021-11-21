@@ -13,7 +13,6 @@ enum pmgData {
 }
 
 enum pmgMemberData {
-    pmg_member_id,
     pmg_member_name[MAX_PLAYER_NAME],
     pmg_member_pmgid,
     pmg_member_rankid
