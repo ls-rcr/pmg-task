@@ -40,8 +40,8 @@ stock IsAlphaNumeric(const string[])
 	return 1;
 }
 
-forward PMGCreate(playerid, gname[]);
-public PMGCreate(playerid, gname[])
+forward PMGCreation(playerid, gname[]);
+public PMGCreation(playerid, gname[])
 {
 	new gid;
 	cache_get_value_name_int(0, "pmgid", gid);
@@ -54,8 +54,7 @@ public PMGCreate(playerid, gname[])
 	return 1;
 }
 
-forward SetRanksPMG(gid);
-public SetRanksPMG(gid)
+stock SetRanksPMG(gid)
 {
 	new query[128];
 	mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgranks (pmgid, rankid, rankname) VALUES (%d, %d, '%s')", gid, 1, "Member");
@@ -75,8 +74,7 @@ public SetRanksPMG(gid)
 	format(pmgRankInfo[gid][3][pmg_rank_name], MAX_PMG_RANK_NAME, "Leader");
 }
 
-forward SetPMGMemberInfo(playerid, gid, rid);
-public SetPMGMemberInfo(playerid, gid, rid)
+stock SetPMGMemberInfo(playerid, gid, rid)
 {
 	new query[128];
 	mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgmembers (username, pmgid, rankid) VALUES ('%s', %d, %d)", PlayerName(playerid), gid, rid);
@@ -211,7 +209,7 @@ stock SendMessageToPMG(gid, const msg[])
 	}
 }
 
-stock PMGCreateCommand(playerid, arg1[])
+stock PMGCreateCMD(playerid, arg1[])
 {
 	if(strlen(arg1) == 0)
         return SendClientMessage(playerid, -1, "Usage: /pmg create <name>");
@@ -226,7 +224,7 @@ stock PMGCreateCommand(playerid, arg1[])
         mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgdata (pmg_name, pmg_owner_name) VALUES ('%s', '%s')", arg1, PlayerName(playerid));
         mysql_tquery(dbhandle, query, "");
         mysql_format(dbhandle, query, sizeof(query), "SELECT * FROM pmgdata WHERE pmg_owner_name='%s'", PlayerName(playerid));
-        mysql_tquery(dbhandle, query, "PMGCreate", "ds", playerid, arg1);
+        mysql_tquery(dbhandle, query, "PMGCreation", "ds", playerid, arg1);
         format(str, sizeof(str), "You have succesfully created a private messaging group called: '%s'", arg1);
         SendPMGMessage(playerid, str);
     }
@@ -237,7 +235,7 @@ stock PMGCreateCommand(playerid, arg1[])
 	return 1;
 }
 
-stock PMGInvite(playerid, id)
+stock PMGInviteCMD(playerid, id)
 {
 	new str[256];
     if(!GetPVarInt(playerid, "groupCreated"))
@@ -265,7 +263,7 @@ stock PMGInvite(playerid, id)
 	return 1;
 }
 
-stock PMGJoin(playerid, id)
+stock PMGJoinCMD(playerid, id)
 {
 	new str[256];
     if(id == primaryPMG[playerid])
@@ -287,7 +285,7 @@ stock PMGJoin(playerid, id)
 	return 1;
 }
 
-stock PMGSay(playerid, arg1[])
+stock PMGSayCMD(playerid, arg1[])
 {
 	if(primaryPMG[playerid] < 0)
 	    return SendErrorMessage(playerid, "You do not have any private messaging groups selected.");
@@ -311,7 +309,7 @@ stock PMGSay(playerid, arg1[])
 	return 1;
 }
 
-stock PMGSelect(playerid)
+stock PMGSelectCMD(playerid)
 {
 	if(primaryPMG[playerid] == -1)
         return SendClientMessage(playerid, -1, "{FF0000}ERROR:{FFFFFF} No groups found.");
@@ -344,7 +342,7 @@ stock PMGSelect(playerid)
 	return 1;
 }
 
-stock PMGLeave(playerid, id)
+stock PMGLeaveCMD(playerid, id)
 {
 	new str[256];
 	if(pmgInfo[id][pmg_owner_name] == pmgMemberInfo[playerid][id][pmg_member_name])
@@ -365,7 +363,7 @@ stock PMGLeave(playerid, id)
 	return 1;
 }
 
-stock PMGDelete(playerid, id)
+stock PMGDeleteCMD(playerid, id)
 {
 	new str[64];
     if(pmgInfo[id][pmg_owner_name] == pmgMemberInfo[playerid][id][pmg_member_name])
@@ -380,7 +378,7 @@ stock PMGDelete(playerid, id)
     }
 }
 
-stock PMGManage(playerid)
+stock PMGManageCMD(playerid)
 {
 	new str[128], ranklist[128], gid = primaryPMG[playerid], rankchosen, uop[MAX_PLAYERS], op, userlist[128], targetid, trank;
     if(pmgMemberInfo[playerid][gid][pmg_member_rankid] < 3)

@@ -32,4 +32,4 @@ new pmgRankInfo[MAX_PMG_GROUPS][MAX_PMG_RANKS][pmgRankData];
 new primaryPMG[MAX_PLAYERS];
 new bool:pmgInvite[MAX_PLAYERS][MAX_PLAYERS];
 
-new usage[128] = "Usage: /pmg <create|say|invite|leave|manage|select>";
+new usage[128] = "Usage: /pmg <create|say|invite|leave|join|manage|select|delete>";
