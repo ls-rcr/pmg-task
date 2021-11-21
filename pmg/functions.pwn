@@ -163,6 +163,13 @@ stock ResetPMGMemberInfo(playerid)
 
 stock DeletePMG(playerid, groupid)
 {
+	new query[128];
+	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgdata WHERE pmgid=%d", groupid);
+	mysql_tquery(dbhandle, query, "");
+	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgmembers WHERE pmgid=%d", groupid);
+	mysql_tquery(dbhandle, query, "");
+	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgranks WHERE pmgid=%d", groupid);
+	mysql_tquery(dbhandle, query, "");
 	RemovePlayerFromPMG(playerid, groupid);
 	pmgInfo[groupid][pmgid] = -1;
 	format(pmgInfo[groupid][pmgname], MAX_PMG_NAME, "INVALID NAME");
