@@ -51,33 +51,10 @@ CMD:pmg(playerid, params[])
     }
     else if(!strcmp(arg, "invite"))
     {
-        new id, str[128];
+        new id;
         if(sscanf(params, "s[24]d", arg, id)) 
             return SendClientMessage(playerid, -1, "Usage: /pmg invite <id>");
-        {
-            if(!GetPVarInt(playerid, "groupCreated"))
-                return SendClientMessage(playerid, -1, "You do not have a private messaging group! Make one using: /pmg create <name>");
-            if(!IsPlayerConnected(id))
-                return SendErrorMessage(playerid, "Player is not connected!");
-            if(id == playerid)
-                return SendErrorMessage(playerid, "You cannot invite yourself!");
-            if(primaryPMG[playerid] < 0)
-                return SendErrorMessage(playerid, "You do not have a primary group selected!")
-            if(pmgInvite[id][primaryPMG[playerid]] == true)
-                return SendErrorMessage(playerid, "Player is already invited!");
-            if(pmgMemberInfo[id][primaryPMG[playerid]][pmg_member_rankid] > 0)
-                return SendErrorMessage(playerid, "Player is already in the group!");
-            if(pmgMemberInfo[playerid][primaryPMG[playerid]][pmg_member_rankid] < 2)
-                return SendErrorMessage(playerid, "You do not have the permission to invite people to your primary group.");
-                
-            pmgInvite[id][primaryPMG[playerid]] = true;
-            format(str, sizeof(str), "You have invited %s(%d) to your private messaging group!", PlayerName(id), id);
-            SendPMGMessage(playerid, str);
-            format(str, sizeof(str), "You have been invited to '%s' by %s(%d)", pmgInfo[primaryPMG[playerid]][pmgname], PlayerName(playerid), playerid);
-            SendPMGMessage(id, str);
-            format(str, sizeof(str), "Use '/pmg join %d' to join that group!", primaryPMG[playerid]);
-            SendPMGMessage(id, str);
-        }
+        PMGInvite(playerid, id);
     }
     else if(!strcmp(arg, "join"))
     {
@@ -105,7 +82,7 @@ CMD:pmg(playerid, params[])
     }
     else if(!strcmp(arg, "select"))
     {
-        if(primaryPMG[playerid] = -1)
+        if(primaryPMG[playerid] == -1)
             return SendClientMessage(playerid, -1, "{FF0000}ERROR:{FFFFFF} No groups found.");
         
         new goptions[256], pmgoptions[256], str[256], options, groupoptions[MAX_PMG_MEMBER_GROUPS], optionid;

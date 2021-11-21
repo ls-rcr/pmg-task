@@ -166,8 +166,6 @@ stock DeletePMG(playerid, groupid)
 	new query[128];
 	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgdata WHERE pmgid=%d", groupid);
 	mysql_tquery(dbhandle, query, "");
-	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgmembers WHERE pmgid=%d", groupid);
-	mysql_tquery(dbhandle, query, "");
 	mysql_format(dbhandle, query, sizeof(query), "DELETE FROM pmgranks WHERE pmgid=%d", groupid);
 	mysql_tquery(dbhandle, query, "");
 	RemovePlayerFromPMG(playerid, groupid);
@@ -213,6 +211,33 @@ stock SendMessageToPMG(gid, const msg[])
 	}
 }
 
+stock PMGInvite(playerid, id)
+{
+	new str[256];
+    if(!GetPVarInt(playerid, "groupCreated"))
+        return SendClientMessage(playerid, -1, "You do not have a private messaging group! Make one using: /pmg create <name>");
+    if(!IsPlayerConnected(id))
+        return SendErrorMessage(playerid, "Player is not connected!");
+    if(id == playerid)
+        return SendErrorMessage(playerid, "You cannot invite yourself!");
+    if(primaryPMG[playerid] < 0)
+        return SendErrorMessage(playerid, "You do not have a primary group selected!");
+    if(pmgInvite[id][primaryPMG[playerid]] == true)
+        return SendErrorMessage(playerid, "Player is already invited!");
+    if(pmgMemberInfo[id][primaryPMG[playerid]][pmg_member_rankid] > 0)
+        return SendErrorMessage(playerid, "Player is already in the group!");
+    if(pmgMemberInfo[playerid][primaryPMG[playerid]][pmg_member_rankid] < 2)
+        return SendErrorMessage(playerid, "You do not have the permission to invite people to your primary group.");
+        
+    pmgInvite[id][primaryPMG[playerid]] = true;
+    format(str, sizeof(str), "You have invited %s(%d) to your private messaging group!", PlayerName(id), id);
+    SendPMGMessage(playerid, str);
+    format(str, sizeof(str), "You have been invited to '%s' by %s(%d)", pmgInfo[primaryPMG[playerid]][pmgname], PlayerName(playerid), playerid);
+    SendPMGMessage(id, str);
+    format(str, sizeof(str), "Use '/pmg join %d' to join that group!", primaryPMG[playerid]);
+    SendPMGMessage(id, str);
+	return 1;
+}
 
 stock strcopy(dest[], const source[], len = sizeof(dest)) 
 {
