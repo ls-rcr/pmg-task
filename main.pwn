@@ -4,7 +4,6 @@
 #include <YSI_Visual/y_dialog>
 #include <YSI_Coding/y_inline>
 #include <a_mysql>
-#include <crashdetect>
 
 new MySQL:dbhandle;
 
@@ -54,10 +53,14 @@ public OnPlayerRequestClass(playerid, classid)
 public OnPlayerConnect(playerid)
 {
 	new query[128];
-	ResetPMGMemberInfo(playerid);
 	mysql_format(dbhandle, query, sizeof(query), "SELECT * FROM pmgmembers WHERE username='%s'", PlayerName(playerid));
 	mysql_tquery(dbhandle, query, "LoadPMGMemberData", "d", playerid);
 	return 1;
+}
+
+public OnPlayerDisconnect(playerid, reason)
+{
+	ResetPMGMemberInfo(playerid);
 }
 
 
