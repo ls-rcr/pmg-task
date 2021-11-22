@@ -271,13 +271,13 @@ stock PMGJoinCMD(playerid, id)
         primaryPMG[playerid] = id;
         SetPMGMemberInfo(playerid, id, 1);
         pmgInvite[playerid][id] = false;
-        SetPVarInt(playerid, "joinedGroup", 1);
         format(str, sizeof(str), "You have joined the group: %s", pmgInfo[id][pmgname]);
         SendPMGMessage(playerid, str);
     }
-    if(!GetPVarInt(playerid, "joinedGroup"))
+    else
+    {
         return SendErrorMessage(playerid, "You either haven't been invited to that group or it doesn't exist!");
-    SetPVarInt(playerid, "joinedGroup", 0);
+    }
 	return 1;
 }
 
