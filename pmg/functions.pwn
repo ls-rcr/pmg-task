@@ -45,6 +45,11 @@ public PMGCreation(playerid, gname[])
 {
 	new gid;
 	cache_get_value_name_int(0, "pmgid", gid);
+    // gid is based on the AUTO_INCREMENT value of the specified table. Since the max value of the first index of pmgInfo is MAX_PLAYERS, it will eventually run out of available
+    // group indexes and it will possibly error out.
+    // To avoid this, the gid can be stored as an enum value (just like on the next line) instead of using it as array index. You could then just keep incrementing on every
+    // new group from zero and use that as array index.
+    // Same applies for the gid index in pmgRankInfo and pmgMemberInfo.
 	pmgInfo[gid][pmgid] = gid;
     format(pmgInfo[gid][pmgname], MAX_PMG_NAME, gname);
     format(pmgInfo[gid][pmg_owner_name], MAX_PLAYER_NAME, PlayerName(playerid));
@@ -57,6 +62,17 @@ public PMGCreation(playerid, gname[])
 stock SetRanksPMG(gid)
 {
 	new query[128];
+    // It would be more flexible if you add arguments like 'rankid', 'rankname[]' so that it adds ranks according to function arguments.
+    
+    // SetRanksPMG(gid, rankid, rankname[]);
+    
+    /* - PMGCreation()
+        SetRanksPMG(gid, 1, "Member");
+        SetRanksPMG(gid, 2, "Moderator");
+        SetRanksPMG(gid, 3, "Leader");
+        ...
+        Could add more ranks without having to rewrite the same thing again.
+    */
 	mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgranks (pmgid, rankid, rankname) VALUES (%d, %d, '%s')", gid, 1, "Member");
 	mysql_tquery(dbhandle, query, "");
 	mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgranks (pmgid, rankid, rankname) VALUES (%d, %d, '%s')", gid, 2, "Moderator");
@@ -91,6 +107,7 @@ public LoadPMGData()
 	cache_get_row_count(rows);
 	for(new i; i < rows; i++)
 	{
+        // Like said in PMGCreation(), here we could use indexes from 0 to MAX_PMG_GROUPS instead of gid as array index.
 		cache_get_value_name_int(i, "pmgid", gid);
 		cache_get_value_name_int(i, "pmgid", pmgInfo[gid][pmgid]);
 		cache_get_value_name(i, "pmg_name", pmgInfo[gid][pmgname]);
@@ -105,9 +122,10 @@ public LoadPMGRanks()
 	cache_get_row_count(rows);
 	for(new i; i < rows; i++)
 	{
+        // Like said in PMGCreation(), here we could use indexes from 0 to MAX_PMG_GROUPS instead of gid as array index.
 		cache_get_value_name_int(i, "pmgid", gid);
 		cache_get_value_name_int(i, "rankid", rid);
-		cache_get_value_name_int(i, "rankid", pmgRankInfo[gid][rid][pmg_rank_id]);
+		cache_get_value_name_int(i, "rankid", pmgRankInfo[gid][rid][pmg_rank_id]); // See definitions.pwn
 		cache_get_value_name(i, "rankname", pmgRankInfo[gid][rid][pmg_rank_name]);
 	}
 }
@@ -207,6 +225,7 @@ stock SendMessageToPMG(gid, const msg[])
 
 stock PMGCreateCMD(playerid, arg1[])
 {
+    // See commands.pwn
 	if(strlen(arg1) == 0)
         return SendClientMessage(playerid, -1, "Usage: /pmg create <name>");
 
@@ -217,8 +236,10 @@ stock PMGCreateCMD(playerid, arg1[])
 
         new str[128], query[128];
         SetPVarInt(playerid, "groupCreated", 1);
+
         mysql_format(dbhandle, query, sizeof(query), "INSERT INTO pmgdata (pmg_name, pmg_owner_name) VALUES ('%s', '%s')", arg1, PlayerName(playerid));
         mysql_tquery(dbhandle, query, "");
+        // Would be safer to execute this query in a callback called by the query above.
         mysql_format(dbhandle, query, sizeof(query), "SELECT * FROM pmgdata WHERE pmg_owner_name='%s'", PlayerName(playerid));
         mysql_tquery(dbhandle, query, "PMGCreation", "ds", playerid, arg1);
         format(str, sizeof(str), "You have succesfully created a private messaging group called: '%s'", arg1);
@@ -299,7 +320,7 @@ stock PMGSayCMD(playerid, arg1[])
 	}
 	else 
 	{            
-	    return SendClientMessage(playerid, -1, "Usage: /pmg say <message>");
+	    return SendClientMessage(playerid, -1, "Usage: /pmg say <message>"); // See commands.pwn
 	}
 	return 1;
 }
@@ -376,6 +397,7 @@ stock PMGDeleteCMD(playerid, id)
     return 1;
 }
 
+// Might be more neat if the Dialog_ShowCallback's are put into functions for better visibility. Or use OnDialogResponse instead of Dialog_ShowCallback.
 stock PMGManageCMD(playerid)
 {
 	new str[128], ranklist[128], gid = primaryPMG[playerid], rankchosen, uop[MAX_PLAYERS], op, userlist[128], targetid, trank;

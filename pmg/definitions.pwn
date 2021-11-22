@@ -18,7 +18,7 @@ enum pmgMemberData {
 }
 
 enum pmgRankData {
-    pmg_rank_id, 
+    pmg_rank_id, // Isn't the rank id already used as array index here? Kinda confused on what the purpose of this is.
     pmg_rank_name[MAX_PMG_RANK_NAME]
 }
 
@@ -30,4 +30,5 @@ new pmgRankInfo[MAX_PMG_GROUPS][MAX_PMG_RANKS][pmgRankData];
 new primaryPMG[MAX_PLAYERS];
 new bool:pmgInvite[MAX_PLAYERS][MAX_PLAYERS];
 
+// Is this really needed?
 new usage[128] = "Usage: /pmg <create|say|invite|leave|join|manage|select|delete>";

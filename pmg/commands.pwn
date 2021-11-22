@@ -1,6 +1,8 @@
 CMD:pmg(playerid, params[])
 {
     new arg[24], arg1[256]; 
+    // It would probably be easier to just put sscanf checks in sub command if statements, like the invite sub command does.
+    // Avoids the need to do argument checks in the sub command function (PMGCreateCMD, PMGSayCMD etc.).
     if(sscanf(params, "s[24]S()", arg, arg1)) 
         return SendClientMessage(playerid, -1, usage);
 
@@ -9,7 +11,7 @@ CMD:pmg(playerid, params[])
         PMGCreateCMD(playerid, arg1);
     }
 
-    else if(!strcmp(arg, "say"))
+    else if(!strcmp(arg, "say")) // Maybe better if 'else if' statements do not have whitespace between them.
     {
         PMGSayCMD(playerid, arg1);
     }
